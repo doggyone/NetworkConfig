@@ -1,0 +1,274 @@
+#==========================================
+# @ConfigName        自用配置文件
+# @ConfigSource      Clone_fr_@kris；https://github.com/beishell/msclash/edit/main/MihomoParty.yaml
+# @Author            Customized_by_@doggyone
+# @UpdateTime        2026-11-18 12:02:29 UTC/GMT +8
+# @Function          支持手动选择、自动测速、广告屏蔽、兜底分流、按国家分组节点、策略图标等、增加Adobe分流、增加常见Ai分流、兼容OneDrive与Scene7图床
+# @mihomo-party      https://github.com/mihomo-party-org/mihomo-party/releases
+# @howtouse          主界面添加本配置[覆写]，然后使用内置的[SubStore]添加机场，之后去[订阅管理]，在配置的[编辑信息]中绑定机场订阅，开启系统代理即可使用
+# @Thanks            @blackmatrix7, @Fndroid, @Anti, @Orz-3, @Koolson, @soffchen, @ACL4SSR, @Cats-Team
+# @ConfigVersion     1.0.20
+#==========================================
+
+# Mixed Port (兼容 Chrome SOCKS5 WebSocket 握手)
+mixed-port: 7891
+port: 0
+socks-port: 0
+# 出站接口名（跨平台兼容：由各端系统根据物理网卡自动适配或覆写脚本动态绑定）
+# interface-name: en0
+
+# TUN 模式防死锁与防回环配置（关闭动态探测，绑定物理网卡 en0，排除代理节点与 VPN 网段）
+tun:
+  enable: false
+  stack: mixed
+  auto-route: true
+  auto-redirect: false
+  auto-detect-interface: true
+  dns-hijack:
+    - any:53
+  route-exclude-address:
+    - 100.64.0.0/10
+    - 103.72.62.103/32
+    - 139.217.229.218/32
+    - 172.30.0.0/16
+    - fd7a:115c:a1e0::/48
+  exclude-interface:
+    - Tailscale
+    - utun4
+  mtu: 1500
+  device: utun1500
+  strict-route: false
+
+# DNS 安全配置 (纯净防泄露架构)
+dns:
+  enable: true
+  listen: 0.0.0.0:53
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - +.lan
+    - +.local
+    - +.tccsys.ad
+    - +.ts.net
+    - +.tailscale.com
+    - +.tailscale.io
+    - cu.090227.xyz
+    - cf.090227.xyz
+    - ct.090227.xyz
+    - cm.090227.xyz
+    - skk.moe
+    - +.090227.xyz
+    - +.729927.xyz
+  # 引导 DNS (用于本地解析引导)
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 180.184.1.1
+  # 解析代理节点域名使用的 DNS (支持 DoH，规避 OpenWrt 劫持)
+  proxy-server-nameserver:
+    - https://dns.alidns.com/dns-query
+    - 223.5.5.5
+    - 119.29.29.29
+  # 直连域名专用的国内快速加密 DNS
+  direct-nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+  # 国外域名及默认 DNS 服务器 (纯净海外 DoH，彻底杜绝国内 DNS 泄露)
+  nameserver:
+    - https://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
+  # 针对国内域名与内网域名的精确分流策略 (确保国内网站秒开且不泄露)
+  nameserver-policy:
+    "geosite:cn,private":
+      - https://dns.alidns.com/dns-query
+      - https://doh.pub/dns-query
+    "+.tccsys.ad":
+      - 172.30.190.20
+    "tccsys.ad":
+      - 172.30.190.20
+    "EC2PRDDYNWBVM01.tccsys.ad":
+      - 172.30.190.20
+    "tpd.tccsys.ad":
+      - 172.30.190.20
+  # DNS 遵循分流规则路由 (关键：国外 DNS 请求全部走代理节点加密出境)
+  respect-rules: true
+  # 备用 DNS 服务器
+  fallback:
+    - tls://8.8.8.8:853
+    - tls://1.0.0.1:853
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+
+proxy-groups:
+#分流分组
+  - {name: 自动选择, type: url-test, include-all: true, interval: 300, tolerance: 50, icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Urltest.png" }
+  - {name: 稳定优选, type: url-test, include-all: true, interval: 300, tolerance: 50, filter: "(?i)reality|hysteria|tuic|trojan|shadow", icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Speed.png" }
+  - {name: 狮城节点, type: url-test, include-all: true, interval: 300, tolerance: 50, filter: "新|坡|SG|(?i)Singapore", icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/SG.png" }
+  - {name: 手动切换, type: select, include-all: true, icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Static.png" }
+  - {name: 全球加速, type: select, proxies: [自动选择, 稳定优选, 狮城节点, 手动切换, DIRECT, 香港节点, 日本节点, 台湾节点, 美国节点, 德国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Global.png" }
+  - {name: 苹果服务, type: select, proxies: [DIRECT, 自动选择, 稳定优选, 狮城节点, 手动切换, 香港节点, 日本节点, 台湾节点, 美国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png" }
+  - {name: 哔哩哔哩, type: select, proxies: [DIRECT, 香港节点, 台湾节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/bilibili.png" }
+  - {name: Emby服务, type: select, proxies: [自动选择, 稳定优选, 狮城节点, 手动切换, DIRECT, 香港节点, 日本节点, 台湾节点, 美国节点, 德国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Emby.png" }
+  - {name: Spotify, type: select, proxies: [自动选择, 稳定优选, 狮城节点, 手动切换, DIRECT, 香港节点, 日本节点, 台湾节点, 美国节点, 德国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Spotify.png" }
+  - {name: OpenAi,   type: select, proxies: [狮城节点, 美国节点, 德国节点, 手动切换, 稳定优选, 自动选择, DIRECT], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/OpenAI.png" }
+  - {name: Gemini,   type: select, proxies: [狮城节点, 美国节点, 德国节点, 手动切换, 稳定优选, 自动选择, DIRECT], icon: "https://ghfast.top/https://github.com/lobehub/lobe-icons/blob/master/packages/static-png/light/gemini-color.png" }
+  - {name: Claude,   type: select, proxies: [狮城节点, 美国节点, 德国节点, 手动切换, 稳定优选, 自动选择, DIRECT], icon: "https://ghfast.top/https://github.com/lobehub/lobe-icons/blob/master/packages/static-png/light/claude-color.png" }
+  - {name: Copilot,  type: select, proxies: [狮城节点, 美国节点, 德国节点, 手动切换, 稳定优选, 自动选择, DIRECT], icon: "https://ghfast.top/https://github.com/lobehub/lobe-icons/blob/master/packages/static-png/light/copilot-color.png" }
+  - {name: 国际媒体, type: select, proxies: [自动选择, 稳定优选, 狮城节点, 手动切换, DIRECT, 香港节点, 日本节点, 台湾节点, 美国节点, 德国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Streaming.png" }
+  - {name: 谷歌服务, type: select, proxies: [自动选择, 稳定优选, 狮城节点, 手动切换, DIRECT, 香港节点, 日本节点, 台湾节点, 美国节点, 德国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Google.png" }
+  - {name: 电报消息, type: select, proxies: [自动选择, 稳定优选, 狮城节点, 手动切换, DIRECT, 香港节点, 日本节点, 台湾节点, 美国节点, 德国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Telegram.png" }
+  - {name: 推特服务, type: select, proxies: [自动选择, 稳定优选, 狮城节点, 手动切换, DIRECT, 香港节点, 日本节点, 台湾节点, 美国节点, 德国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Twitter.png" }
+  - {name: 游戏平台, type: select, proxies: [DIRECT, 自动选择, 稳定优选, 狮城节点, 手动切换, 香港节点, 日本节点, 台湾节点, 美国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/GAME.png" }
+  - {name: AdBlock,  type: select, proxies: [REJECT, DIRECT], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Adblock.png" }
+  - {name: 兜底分流, type: select, proxies: [自动选择, 稳定优选, 狮城节点, 手动切换, DIRECT, 香港节点, 日本节点, 台湾节点, 美国节点, 德国节点], icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/Final.png" }
+  
+#节点分组
+  - {name: 香港节点, type: url-test, include-all: true, interval: 600, tolerance: 50,  filter: "港|HK|(?i)Hong", icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/HK.png" }             
+  - {name: 日本节点, type: url-test, include-all: true, interval: 600, tolerance: 50,  filter: "日|东京|JP|(?i)Japan", icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/JP.png" }
+  - {name: 台湾节点, type: url-test, include-all: true, interval: 600, tolerance: 50,  filter: "台|湾|TW|(?i)Taiwan", icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/TW.png" }
+  - {name: 美国节点, type: url-test, include-all: true, interval: 600, tolerance: 50,  filter: "美|US|(?i)States|American", icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/US.png" }
+  - {name: 德国节点, type: url-test, include-all: true, interval: 600, tolerance: 50,  filter: "德|DE|(?i)Germany", icon: "https://ghfast.top/https://raw.githubusercontent.com/Orz-3/mini/master/Color/DE.png" }
+# 分流规则 
+rule-providers:
+  AdBlock:     {behavior: domain,    interval: 86400, format: text, type: http, url: "https://raw.githubusercontent.com/Cats-Team/AdRules/main/adrules_domainset.txt" ,                                           path: ./ruleset/anti-ad-clash.txt, proxy: 全球加速 }
+  AdobeActivation: {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/AdobeActivation/AdobeActivation.yaml" , path: ./ruleset/AdobeActivation.yaml, proxy: 全球加速 }
+  Adobe:       {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Adobe/Adobe.yaml" ,             path: ./ruleset/Adobe.yaml, proxy: 全球加速 }
+  Ai:          {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://ddgksf2013.top/filter/Ai.yaml" ,         path: ./ruleset/Ai.yaml, proxy: 全球加速 }
+  Spotify:     {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/Spotify/Spotify.yaml" ,         path: ./ruleset/Spotify.yaml, proxy: 全球加速 }
+  OpenAi:      {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml" ,                      path: ./ruleset/OpenAi.yaml, proxy: 全球加速 }
+  Gemini:      {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Gemini/Gemini.yaml" ,                      path: ./ruleset/Gemini.yaml, proxy: 全球加速 }
+  Claude:      {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Claude/Claude.yaml" ,                      path: ./ruleset/Claude.yaml, proxy: 全球加速 }
+  Copilot:     {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml" ,                    path: ./ruleset/Copilot.yaml, proxy: 全球加速 }
+  Emby:        {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/beishell/msclash/refs/heads/main/Emby.yaml" ,                                             path: ./ruleset/Emby.yaml, proxy: 全球加速 }
+  BiliBili:    {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/BiliBili/BiliBili.yaml" ,                  path: ./ruleset/BiliBili.yaml, proxy: 全球加速 }
+  Bahamut:     {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bahamut/Bahamut.yaml" ,                    path: ./ruleset/Bahamut.yaml, proxy: 全球加速 } 
+  GlobalMedia: {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GlobalMedia/GlobalMedia_Classical.yaml" ,  path: ./ruleset/GlobalMedia.yaml, proxy: 全球加速 }
+  OneDrive:    {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/OneDrive/OneDrive.yaml" ,       path: ./ruleset/OneDrive.yaml, proxy: 全球加速 }
+  Apple:       {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple_Classical.yaml" ,              path: ./ruleset/Apple.yaml, proxy: 全球加速 }
+  Github:      {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml" ,                      path: ./ruleset/Github.yaml, proxy: 全球加速 }
+  Microsoft:   {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml" ,                path: ./ruleset/Microsoft.yaml, proxy: 全球加速 }
+  Google:      {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml" ,                      path: ./ruleset/Google.yaml, proxy: 全球加速 }
+  Telegram:    {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml" ,                  path: ./ruleset/Telegram.yaml, proxy: 全球加速 }
+  Twitter:     {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml" ,                    path: ./ruleset/Twitter.yaml, proxy: 全球加速 }
+  Game:        {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Game/Game.yaml" ,                          path: ./ruleset/Game.yaml, proxy: 全球加速 }
+  ProxyLite:   {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ProxyLite/ProxyLite.yaml" ,                path: ./ruleset/ProxyLite.yaml, proxy: 全球加速 }
+  Direct:      {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml" ,                      path: ./ruleset/Direct.yaml, proxy: 全球加速 }
+  Lan:         {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml" ,                            path: ./ruleset/Lan.yaml, proxy: 全球加速 }
+  Download:    {behavior: classical, interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Download/Download.yaml" ,                  path: ./ruleset/Download.yaml, proxy: 全球加速 }
+  ChinaIP:     {behavior: ipcidr,    interval: 86400, format: yaml, type: http, url: "https://raw.githubusercontent.com/soffchen/GeoIP2-CN/release/clash-rule-provider.yml" ,                                     path: ./ruleset/ChinaIP.yaml, proxy: 全球加速 }
+
+# 分流Policy 
+hosts:
+  "tpd.tccsys.ad": "172.30.190.100"
+  "EC2PRDDYNWBVM01.tccsys.ad": "172.30.190.100"
+  "skk.moe": "104.26.14.26"
+
+rules:
+  # Tailscale 专属直连穿透（防止 STUN 打洞失败与 WireGuard 流量被代理劫持）
+  - PROCESS-NAME,Tailscale,DIRECT
+  - PROCESS-NAME,io.tailscale.ipn.macsys.network-extension,DIRECT
+  - PROCESS-NAME,tailscaled,DIRECT
+  - PROCESS-NAME,tailscaled.exe,DIRECT
+  - PROCESS-NAME,tailscale-ipn.exe,DIRECT
+  - DST-PORT,41641,DIRECT
+  - SRC-PORT,41641,DIRECT
+  - DST-PORT,3478,DIRECT
+  - DOMAIN-SUFFIX,ts.net,DIRECT
+  - DOMAIN-SUFFIX,tailscale.com,DIRECT
+  - DOMAIN-SUFFIX,tailscale.io,DIRECT
+  - IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
+  - IP-CIDR6,fd7a:115c:a1e0::/48,DIRECT,no-resolve
+  - DOMAIN-SUFFIX,owto.de,DIRECT
+  - DOMAIN-SUFFIX,tccsys.ad,DIRECT
+  - DOMAIN,EC2PRDDYNWBVM01.tccsys.ad,DIRECT
+  - DOMAIN,tpd.tccsys.ad,DIRECT
+  - IP-CIDR,172.30.0.0/16,DIRECT,no-resolve
+  - IP-CIDR,139.217.229.218/32,DIRECT,no-resolve
+  # Google & Antigravity 核心接口（强制绑定 Gemini 策略组，锁定 SG/US 节点，规避 HK 节点 403 地区限制）
+  - DOMAIN-SUFFIX,antigravity-unleash.goog,Gemini
+  - DOMAIN-SUFFIX,goog,Gemini
+  - DOMAIN-SUFFIX,antigravity.google,Gemini
+  - DOMAIN-SUFFIX,antigravity.dev,Gemini
+  - DOMAIN,daily-cloudcode-pa.googleapis.com,Gemini
+  - DOMAIN,cloudcode-pa.googleapis.com,Gemini
+  - DOMAIN,generativelanguage.googleapis.com,Gemini
+  - DOMAIN-KEYWORD,cloudcode,Gemini
+  - DOMAIN-KEYWORD,antigravity,Gemini
+  - DOMAIN,firebaselogging-pa.googleapis.com,Gemini
+  - DOMAIN-SUFFIX,googleapis.com,谷歌服务
+  - DOMAIN-SUFFIX,googleusercontent.com,谷歌服务
+  - DOMAIN-SUFFIX,google.com,谷歌服务
+  - DOMAIN-SUFFIX,gstatic.com,谷歌服务
+  - DOMAIN-SUFFIX,baidu.com,DIRECT
+  - DOMAIN-SUFFIX,tencent.com,DIRECT
+  - DOMAIN-SUFFIX,edu.cn,DIRECT
+  # 防 DNS 泄露置顶规则
+  - DOMAIN-SUFFIX,browserleaks.com,全球加速
+  - DOMAIN-SUFFIX,browserleaks.org,全球加速
+  - DOMAIN-SUFFIX,dnsleaktest.com,全球加速
+  - DOMAIN-SUFFIX,ipleak.net,全球加速
+  - DOMAIN-SUFFIX,dnsleak.com,全球加速
+  - DOMAIN-SUFFIX,expressvpn.com,全球加速
+  - DOMAIN-SUFFIX,surfshark.com,全球加速
+  - DOMAIN-SUFFIX,top10vpn.com,全球加速
+  - DOMAIN-SUFFIX,whoer.net,全球加速
+  - DOMAIN-SUFFIX,webtrn.cn,DIRECT
+  # 科勒等网站的 Adobe Scene7 图床放行（需置于 Adobe 规则集之前，避免被 AdBlock 误杀）
+  - DOMAIN-SUFFIX,scene7.com,DIRECT
+  # OneDrive / SharePoint 数据面与国内可达边缘节点直连（提速并防止代理断流）
+  - DOMAIN-SUFFIX,sharepoint.com,DIRECT
+  - DOMAIN-SUFFIX,sharepointonline.com,DIRECT
+  - DOMAIN-SUFFIX,oneclient.sfx.ms,DIRECT
+  - DOMAIN-SUFFIX,spoprod-a.akamaihd.net,DIRECT
+  - DOMAIN-SUFFIX,livefilestore.com,DIRECT
+  - DOMAIN-SUFFIX,microsoftpersonalcontent.com,DIRECT
+  - DOMAIN-SUFFIX,storage.live.com,DIRECT
+  - DOMAIN-SUFFIX,storage.msn.com,DIRECT
+  - DOMAIN-SUFFIX,svc.ms,DIRECT
+  - DOMAIN,api.onedrive.com,DIRECT
+  - DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
+  - DOMAIN-SUFFIX,msftncsi.com,DIRECT
+  # OneDrive 个人版控制面与登录走 稳定优选（避开 CF ws 节点 TLS 握手超时）
+  - DOMAIN-SUFFIX,onedrive.live.com,稳定优选
+  - DOMAIN-SUFFIX,1drv.com,稳定优选
+  - DOMAIN-SUFFIX,onedrive.com,稳定优选
+  - DOMAIN-SUFFIX,login.live.com,稳定优选
+  - DOMAIN-SUFFIX,graph.microsoft.com,稳定优选
+  - RULE-SET,AdBlock,AdBlock
+  - RULE-SET,AdobeActivation,AdBlock
+  - RULE-SET,Adobe,AdBlock
+  - RULE-SET,OpenAi,OpenAi
+  - RULE-SET,Gemini,Gemini
+  - RULE-SET,Claude,Claude
+  - RULE-SET,Copilot,Copilot
+  - RULE-SET,Emby,Emby服务
+  - RULE-SET,Spotify,Spotify
+  - RULE-SET,BiliBili,哔哩哔哩
+  - RULE-SET,Bahamut,哔哩哔哩
+  - RULE-SET,GlobalMedia,国际媒体
+  - RULE-SET,Apple,苹果服务
+  - RULE-SET,Github,全球加速
+  - RULE-SET,OneDrive,全球加速
+  - RULE-SET,Microsoft,全球加速
+  - RULE-SET,Ai,全球加速
+  - RULE-SET,Google,谷歌服务
+  - RULE-SET,Telegram,电报消息
+  - RULE-SET,Twitter,全球加速
+  - RULE-SET,Game,游戏平台
+  - RULE-SET,ProxyLite,全球加速
+  - RULE-SET,ChinaIP,DIRECT,no-resolve
+  - RULE-SET,Direct,DIRECT
+  - RULE-SET,Lan,DIRECT
+  - RULE-SET,Download,DIRECT
+  # 本地原生中国全量域名数据库直连（从本地 geosite.dat 加载，无需网络下载，永不为0，永不超时，国内秒开）
+  - GEOSITE,cn,DIRECT
+  # 局域网与私网直连
+  - GEOIP,private,DIRECT,no-resolve
+  # 本地原生中国 IP 数据库最终兜底直连（未命中前排规则的国内域名解析出的国内 IP 坚决走直连，绝不出海）
+  - GEOIP,cn,DIRECT
+  # 兜底分流
+  - MATCH,兜底分流
