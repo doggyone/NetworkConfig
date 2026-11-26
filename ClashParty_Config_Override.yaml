@@ -17,9 +17,9 @@ socks-port: 0
 # 出站接口名（跨平台兼容：由各端系统根据物理网卡自动适配或覆写脚本动态绑定）
 # interface-name: en0
 
-# TUN 模式防死锁与防回环配置（关闭动态探测，绑定物理网卡 en0，排除代理节点与 VPN 网段）
+# TUN 模式防死锁与防回环配置（自动探测出站接口，排除代理节点与 VPN 网段）
 tun:
-  enable: false
+  enable: true
   stack: mixed
   auto-route: true
   auto-redirect: false
@@ -42,7 +42,7 @@ tun:
 # DNS 安全配置 (纯净防泄露架构)
 dns:
   enable: true
-  listen: 0.0.0.0:53
+  listen: 127.0.0.1:53
   ipv6: false
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
